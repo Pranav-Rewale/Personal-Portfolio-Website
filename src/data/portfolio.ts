@@ -21,18 +21,20 @@ export const skills = {
   ],
 }
 
-export type ProjectCategory = 'All' | 'Full-Stack' | 'Java'
+export type ProjectCategory = 'All' | 'Full-Stack' | 'Java' | 'Frontend'
 
 export interface Project {
   id: number
   title: string
   year: string
-  category: 'Full-Stack' | 'Java'
+  category: Exclude<ProjectCategory, 'All'>
   summary: string
   tech: string[]
   github: string
   live?: string
   image: string
+  imageAlt?: string
+  imagePosition?: 'center' | 'top'
 }
 
 export const projects: Project[] = [
@@ -98,6 +100,18 @@ export const projects: Project[] = [
     github: 'https://github.com/Pranav-Rewale/Student-Course-Management-System',
     image: 'https://cloudassess.com/wp-content/uploads/2026/04/Litmos-course-management-system.jpg',
   },
+  {
+    id: 7,
+    title: 'Cellwise — Introduction to Excel',
+    year: '2026',
+    category: 'Frontend',
+    summary: 'Built a responsive five-lesson Excel learning site with accessible navigation, saved lesson progress, and a scored quiz with explanatory feedback.',
+    tech: ['HTML', 'CSS', 'JavaScript', 'localStorage'],
+    github: 'https://github.com/Pranav-Rewale/Cellwise---Introduction-to-Excel',
+    image: '/images/projects/cellwise.png',
+    imageAlt: 'Cellwise course overview with lesson navigation, learning outcomes, and an Excel workshop budget illustration',
+    imagePosition: 'top',
+  },
 ]
 
 export const services = [
@@ -140,6 +154,6 @@ export const contact = {
   email: 'pranavrewale03@gmail.com',
   phone: '+91 80106 02191',
   location: 'Mumbai, India',
-  linkedin: 'https://www.linkedin.com/in/pranav-rewale-7590b925b',
+  linkedin: 'https://www.linkedin.com/in/pranavrewale',
   github: 'https://github.com/Pranav-Rewale',
 }

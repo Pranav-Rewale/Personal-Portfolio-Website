@@ -4,7 +4,7 @@ import { ExternalLink, Github } from 'lucide-react'
 import { projects, type ProjectCategory } from '../data/portfolio'
 import { FadeUp, StaggerList, StaggerItem } from './AnimatedSection'
 
-const filters: ProjectCategory[] = ['All', 'Full-Stack', 'Java']
+const filters: ProjectCategory[] = ['All', 'Full-Stack', 'Java', 'Frontend']
 
 export default function Work() {
   const [active, setActive] = useState<ProjectCategory>('All')
@@ -25,12 +25,12 @@ export default function Work() {
 
           {/* Filter tabs */}
           <FadeUp delay={0.15}>
-            <div className="flex items-center gap-2 flex-wrap" role="tablist" aria-label="Project filter">
+            <div className="flex items-center gap-2 flex-wrap" role="group" aria-label="Project filter">
               {filters.map(f => (
                 <motion.button
                   key={f}
-                  role="tab"
-                  aria-selected={active === f}
+                  type="button"
+                  aria-pressed={active === f}
                   onClick={() => setActive(f)}
                   className={`relative px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     active === f ? 'text-white' : 'text-neutral-600 hover:text-neutral-900'
@@ -85,8 +85,9 @@ function ProjectCard({ project }: { project: (typeof projects)[0] }) {
       <div className="relative overflow-hidden aspect-[4/3] bg-neutral-100">
         <motion.img
           src={project.image}
-          alt={project.title}
+          alt={project.imageAlt ?? project.title}
           className="w-full h-full object-cover"
+          style={{ objectPosition: project.imagePosition ?? 'center' }}
           loading="lazy"
           whileHover={{ scale: 1.07 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -150,6 +151,31 @@ function ProjectCard({ project }: { project: (typeof projects)[0] }) {
             <span className="px-2.5 py-1 bg-neutral-100 text-neutral-400 text-xs rounded-full font-medium">
               +{project.tech.length - 4}
             </span>
+          )}
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-4">
+          <a
+            href={project.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`View ${project.title} source code on GitHub`}
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-violet-700 hover:text-violet-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600 rounded"
+          >
+            <Github size={16} aria-hidden="true" />
+            Source Code
+          </a>
+          {project.live && (
+            <a
+              href={project.live}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`View ${project.title} live demo`}
+              className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-neutral-700 hover:text-violet-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600 rounded"
+            >
+              <ExternalLink size={16} aria-hidden="true" />
+              Live Demo
+            </a>
           )}
         </div>
       </div>
