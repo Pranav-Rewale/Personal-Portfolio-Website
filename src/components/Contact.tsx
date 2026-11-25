@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import { contact } from '../data/portfolio'
@@ -12,6 +12,15 @@ export default function Contact() {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([])
   const [message, setMessage] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [isSending, setIsSending] = useState(false)
+  const [error, setError] = useState('')
+  const inFlight = useRef(false)
+  const successHeading = useRef<HTMLHeadingElement>(null)
+  const errorSummary = useRef<HTMLParagraphElement>(null)
+
+  useEffect(() => {
+    if (submitted) successHeading.current?.focus()
+  }, [submitted])
 
   const toggleInterest = (item: string) => {
     setSelectedInterests(prev =>
@@ -19,9 +28,56 @@ export default function Contact() {
     )
   }
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setSubmitted(true)
+    if (inFlight.current) return
+    setError('')
+
+    const form = new FormData(e.currentTarget)
+    if (String(form.get('_honey') ?? '').trim()) return
+
+    if (name.trim().length < 2 || message.trim().length < 10) {
+      setError('Please enter your name and a message of at least 10 characters.')
+      requestAnimationFrame(() => errorSummary.current?.focus())
+      return
+    }
+
+    inFlight.current = true
+    setIsSending(true)
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 20000)
+
+    try {
+      const response = await fetch(`https://formsubmit.co/ajax/${contact.email}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          interests: selectedInterests.join(', ') || 'Not specified',
+          message: message.trim(),
+          _subject: 'New portfolio enquiry — Pranav Rewale',
+          _template: 'table',
+          _url: `${window.location.origin}${window.location.pathname}#contact`,
+          _honey: '',
+        }),
+      })
+      const result: { success?: boolean | string; message?: string } = await response.json()
+
+      if (!response.ok || (result.success !== true && result.success !== 'true')) {
+        throw new Error('Submission was not accepted')
+      }
+
+      setSubmitted(true)
+    } catch {
+      setError('Your message could not be confirmed. Please try again or use the email link below to contact me directly.')
+      requestAnimationFrame(() => errorSummary.current?.focus())
+    } finally {
+      window.clearTimeout(timeout)
+      inFlight.current = false
+      setIsSending(false)
+    }
   }
 
   return (
@@ -125,10 +181,10 @@ export default function Contact() {
                     >
                       🎉
                     </motion.div>
-                    <h3 className="text-2xl font-bold text-neutral-900 mb-2">Message sent!</h3>
-                    <p className="text-neutral-500">Thanks for reaching out. I'll get back to you soon.</p>
+                    <h3 ref={successHeading} tabIndex={-1} className="text-2xl font-bold text-neutral-900 mb-2 focus:outline-none">Message submitted!</h3>
+                    <p role="status" className="text-neutral-500">Thanks for reaching out. Your enquiry has been accepted for email delivery.</p>
                     <button
-                      onClick={() => { setSubmitted(false); setName(''); setEmail(''); setMessage(''); setSelectedInterests([]) }}
+                      onClick={() => { setSubmitted(false); setError(''); setName(''); setEmail(''); setMessage(''); setSelectedInterests([]) }}
                       className="mt-6 text-sm font-medium text-violet-600 hover:underline"
                     >
                       Send another
@@ -138,20 +194,37 @@ export default function Contact() {
                   <motion.form
                     key="form"
                     onSubmit={handleSubmit}
+                    action={`https://formsubmit.co/${contact.email}`}
+                    method="POST"
+                    aria-busy={isSending}
                     className="space-y-5"
-                    noValidate
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                   >
+                    <div className="hidden" aria-hidden="true">
+                      <label htmlFor="contact-website">Leave this field empty</label>
+                      <input id="contact-website" type="text" name="_honey" tabIndex={-1} autoComplete="off" />
+                    </div>
+                    {error && (
+                      <p ref={errorSummary} tabIndex={-1} role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-800 focus:outline-none">
+                        {error}{' '}
+                        <a className="font-semibold underline" href={`mailto:${contact.email}`}>Email {contact.email}</a>
+                      </p>
+                    )}
                     <div>
                       <label htmlFor="contact-name" className="block text-xs font-semibold text-neutral-500 mb-1.5">
                         What's your name?
                       </label>
                       <input
                         id="contact-name"
+                        name="name"
                         type="text"
+                        autoComplete="name"
+                        minLength={2}
+                        maxLength={100}
+                        disabled={isSending}
                         required
                         value={name}
                         onChange={e => setName(e.target.value)}
@@ -166,7 +239,11 @@ export default function Contact() {
                       </label>
                       <input
                         id="contact-email"
+                        name="email"
                         type="email"
+                        autoComplete="email"
+                        maxLength={254}
+                        disabled={isSending}
                         required
                         value={email}
                         onChange={e => setEmail(e.target.value)}
@@ -182,6 +259,7 @@ export default function Contact() {
                           <motion.button
                             key={item}
                             type="button"
+                            disabled={isSending}
                             onClick={() => toggleInterest(item)}
                             className={`relative px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
                               selectedInterests.includes(item)
@@ -210,7 +288,11 @@ export default function Contact() {
                       </label>
                       <textarea
                         id="contact-message"
+                        name="message"
                         required
+                        minLength={10}
+                        maxLength={5000}
+                        disabled={isSending}
                         rows={4}
                         value={message}
                         onChange={e => setMessage(e.target.value)}
@@ -221,13 +303,17 @@ export default function Contact() {
 
                     <motion.button
                       type="submit"
-                      className="w-full bg-neutral-900 text-white text-sm font-bold py-4 rounded-full"
+                      disabled={isSending}
+                      className="w-full bg-neutral-900 text-white text-sm font-bold py-4 rounded-full disabled:opacity-60 disabled:cursor-wait"
                       whileHover={{ backgroundColor: '#7C3AED', scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       transition={{ duration: 0.15 }}
                     >
-                      Send Message →
+                      {isSending ? 'Sending…' : 'Send Message →'}
                     </motion.button>
+                    <p className="text-xs text-neutral-500 leading-relaxed">
+                      Your details are sent through FormSubmit to my email so I can reply to your enquiry.
+                    </p>
                   </motion.form>
                 )}
               </AnimatePresence>
