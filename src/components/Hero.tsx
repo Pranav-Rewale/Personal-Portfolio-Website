@@ -1,8 +1,5 @@
-import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowDown } from 'lucide-react'
-
-const roles = ['FULL-STACK DEVELOPER', 'JAVA DEVELOPER', 'BACKEND ENGINEER']
 
 // Entrance animation variants
 const heroLine = {
@@ -24,28 +21,6 @@ const heroCopy = {
 }
 
 export default function Hero() {
-  const [roleIndex, setRoleIndex] = useState(0)
-  const [displayed, setDisplayed] = useState('')
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  useEffect(() => {
-    const current = roles[roleIndex]
-    let timeout: ReturnType<typeof setTimeout>
-
-    if (!isDeleting && displayed.length < current.length) {
-      timeout = setTimeout(() => setDisplayed(current.slice(0, displayed.length + 1)), 75)
-    } else if (!isDeleting && displayed.length === current.length) {
-      timeout = setTimeout(() => setIsDeleting(true), 2400)
-    } else if (isDeleting && displayed.length > 0) {
-      timeout = setTimeout(() => setDisplayed(current.slice(0, displayed.length - 1)), 40)
-    } else {
-      setIsDeleting(false)
-      setRoleIndex(i => (i + 1) % roles.length)
-    }
-
-    return () => clearTimeout(timeout)
-  }, [displayed, isDeleting, roleIndex])
-
   return (
     <section
       id="home"
@@ -74,36 +49,16 @@ export default function Hero() {
       />
 
       <div className="relative max-w-7xl mx-auto px-6 w-full">
-        {/* CREATIVE — large decorative word */}
-        <div className="overflow-hidden">
-          <motion.p
-            className="hero-text text-neutral-900"
-            variants={heroLine}
-            custom={0}
-            initial="hidden"
-            animate="show"
-            aria-hidden="true"
-          >
-            CREATIVE
-          </motion.p>
-        </div>
-
-        {/* Typewriter role line */}
-        <div className="overflow-hidden">
+        {/* Main heading */}
+        <div>
           <motion.h1
-            className="hero-text text-neutral-900"
+            className="max-w-5xl text-[clamp(2.25rem,7vw,6.5rem)] font-black leading-[1.05] tracking-tight text-neutral-900"
             variants={heroLine}
             custom={0.15}
             initial="hidden"
             animate="show"
-            aria-label={`Pranav Rewale — ${displayed}`}
           >
-            <span className="text-neutral-200">&amp;</span>{' '}
-            {displayed}
-            <span
-              className="inline-block w-[0.06em] h-[0.8em] bg-violet-500 ml-1 align-middle animate-pulse"
-              aria-hidden="true"
-            />
+            Graduate Software Developer
           </motion.h1>
         </div>
 
