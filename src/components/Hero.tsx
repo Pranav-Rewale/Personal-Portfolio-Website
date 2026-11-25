@@ -1,15 +1,5 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowDown } from 'lucide-react'
-
-// Entrance animation variants
-const heroLine = {
-  hidden: { opacity: 0, y: 80 },
-  show: (delay: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] },
-  }),
-}
 
 const heroCopy = {
   hidden: { opacity: 0, y: 20 },
@@ -21,6 +11,16 @@ const heroCopy = {
 }
 
 export default function Hero() {
+  const shouldReduceMotion = useReducedMotion()
+  const headingWord = {
+    hidden: { opacity: 0, y: 28 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: shouldReduceMotion ? 0 : 0.65, ease: [0.22, 1, 0.36, 1] },
+    },
+  }
+
   return (
     <section
       id="home"
@@ -53,12 +53,27 @@ export default function Hero() {
         <div>
           <motion.h1
             className="max-w-5xl text-[clamp(2.25rem,7vw,6.5rem)] font-black leading-[1.05] tracking-tight text-neutral-900"
-            variants={heroLine}
-            custom={0.15}
-            initial="hidden"
+            aria-label="Graduate Software Developer"
+            variants={{
+              hidden: {},
+              show: { transition: { staggerChildren: shouldReduceMotion ? 0 : 0.18, delayChildren: shouldReduceMotion ? 0 : 0.15 } },
+            }}
+            initial={shouldReduceMotion ? false : 'hidden'}
             animate="show"
           >
-            Graduate Software Developer
+            {['Graduate', 'Software', 'Developer'].map((word, index) => (
+              <span key={word}>
+                <motion.span
+                  aria-hidden="true"
+                  className="inline-block"
+                  variants={headingWord}
+                  whileHover={shouldReduceMotion ? undefined : { y: -3, color: '#7C3AED' }}
+                >
+                  {word}
+                </motion.span>
+                {index < 2 && ' '}
+              </span>
+            ))}
           </motion.h1>
         </div>
 
@@ -106,10 +121,9 @@ export default function Hero() {
           </motion.a>
           <motion.a
             href="/resume.pdf"
+            download="Pranav_Rewale_Resume.pdf"
             className="text-sm font-medium text-neutral-500 underline underline-offset-4"
             whileHover={{ color: '#111' }}
-            target="_blank"
-            rel="noopener noreferrer"
           >
             Download Resume
           </motion.a>
